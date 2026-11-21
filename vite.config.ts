@@ -17,7 +17,7 @@ export default defineConfig({
             },
             formats: ['es']
         },
-        rollupOptions: {
+        rolldownOptions: {
             external: ['svelte', /^svelte\/.*/]
         }
     },

@@ -113,7 +113,7 @@ export class TourManager {
         this.activeSession = null;
 
         const state = getTourState(tour.name, this.storageKey);
-        const shouldResume = options.resume !== false && state.lastSectionKey !== null;
+        const shouldResume = options.resume !== false && !state.completed && state.lastSectionKey !== null;
         const savedIndex = shouldResume && state.lastSectionKey
             ? tour.getIndex(state.lastSectionKey)
             : -1;
@@ -277,10 +277,12 @@ export class TourManager {
             return false;
         }
 
+        const isLastSection = sectionIndex >= tour.sectionKeys.length - 1;
+
         updateTourState(
             tour.name,
             {
-                completed: false,
+                completed: isLastSection,
                 lastSectionKey: sectionKey
             },
             this.storageKey

@@ -91,30 +91,79 @@ describe('TourManager', () => {
     });
 
     it('prevents auto-start after close and resumes at saved section when started again', () => {
-        manager.addTour(createDashboardTour({ autoStart: true }));
-        expect(manager.getActiveState()?.tourName).toBe('dashboard');
-        expect(manager.getActiveState()?.sectionKey).toBe('intro');
+        const multiStepTour: TourConfig = {
+            name: 'multiStep',
+            autoStart: true,
+            sections: {
+                step1: { elements: ['.step1'], content: { title: 'Step 1' } },
+                step2: { elements: ['.step2'], content: { title: 'Step 2' } },
+                step3: { elements: ['.step3'], content: { title: 'Step 3' } }
+            }
+        };
+
+        manager.addTour(multiStepTour);
+        expect(manager.getActiveState()?.tourName).toBe('multiStep');
+        expect(manager.getActiveState()?.sectionKey).toBe('step1');
 
         manager.next();
-        expect(manager.getActiveState()?.sectionKey).toBe('helpInfo');
+        expect(manager.getActiveState()?.sectionKey).toBe('step2');
 
         manager.close();
         expect(manager.getActiveState()).toBeNull();
-        expect(getTourState('dashboard', STORAGE_KEY)).toEqual({
+        expect(getTourState('multiStep', STORAGE_KEY)).toEqual({
             dismissed: true,
             completed: false,
-            lastSectionKey: 'helpInfo'
+            lastSectionKey: 'step2'
         });
 
         // Re-adding an autoStart tour should not start automatically after close.
         const secondManager = new TourManager({ storageKey: STORAGE_KEY, eventTarget });
-        secondManager.addTour(new Tour(createDashboardTour({ autoStart: true })));
+        secondManager.addTour(new Tour(multiStepTour));
         expect(secondManager.getActiveState()).toBeNull();
 
         // Explicit start resumes at the saved section.
-        secondManager.start('dashboard');
-        expect(secondManager.getActiveState()?.tourName).toBe('dashboard');
-        expect(secondManager.getActiveState()?.sectionKey).toBe('helpInfo');
+        secondManager.start('multiStep');
+        expect(secondManager.getActiveState()?.tourName).toBe('multiStep');
+        expect(secondManager.getActiveState()?.sectionKey).toBe('step2');
+    });
+
+    it('marks tour as completed when last section is reached and restarts from beginning on re-run', () => {
+        manager.addTour(createDashboardTour());
+        manager.start('dashboard');
+        expect(manager.getActiveState()?.sectionKey).toBe('intro');
+        expect(getTourState('dashboard', STORAGE_KEY).completed).toBe(false);
+
+        // Advance to the last section
+        manager.next();
+        expect(manager.getActiveState()?.sectionKey).toBe('helpInfo');
+        expect(getTourState('dashboard', STORAGE_KEY)).toEqual({
+            dismissed: false,
+            completed: true,
+            lastSectionKey: 'helpInfo'
+        });
+
+        manager.close();
+        expect(getTourState('dashboard', STORAGE_KEY)).toEqual({
+            dismissed: true,
+            completed: true,
+            lastSectionKey: 'helpInfo'
+        });
+
+        // Re-running the tour should start at the first section rather than the last
+        manager.start('dashboard');
+        expect(manager.getActiveState()?.sectionKey).toBe('intro');
+        expect(getTourState('dashboard', STORAGE_KEY).completed).toBe(false);
+    });
+
+    it('resets completed flag when navigating back to a previous section', () => {
+        manager.addTour(createDashboardTour());
+        manager.start('dashboard');
+        manager.next();
+        expect(getTourState('dashboard', STORAGE_KEY).completed).toBe(true);
+
+        manager.previous();
+        expect(manager.getActiveState()?.sectionKey).toBe('intro');
+        expect(getTourState('dashboard', STORAGE_KEY).completed).toBe(false);
     });
 
     it('resets stored state and starts from section 0 on restart', () => {
