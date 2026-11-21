@@ -71,10 +71,34 @@ function applyTooltipPosition(
     state: ActiveSectionState,
     padding: number
 ): void {
-    if (state.placement === 'top-center' || !state.anchorRect) {
-        tooltip.style.top = '24px';
-        tooltip.style.left = '50%';
-        tooltip.style.transform = 'translateX(-50%)';
+    console.log('applyTooltipPosition', state.anchorRect, state.placement, padding);
+    if (!state.anchorRect) {
+        switch(state.placement) {
+            case 'top-center':
+                tooltip.style.top = '24px';
+                tooltip.style.left = '50%';
+                tooltip.style.transform = 'translateX(-50%)';
+                break;
+            // case 'bottom-center':
+            //     tooltip.style.bottom = '24px';
+            //     tooltip.style.left = '50%';
+            //     tooltip.style.transform = 'translateX(-50%)';
+            //     break;
+            // case 'left-center':
+            //     tooltip.style.left = '24px';
+            //     tooltip.style.top = '50%';
+            //     tooltip.style.transform = 'translateY(-50%)';
+            //     break;
+            // case 'right-center':
+            //     tooltip.style.right = '24px';
+            //     tooltip.style.top = '50%';
+            //     tooltip.style.transform = 'translateY(-50%)';
+            //     break;
+            default:
+                tooltip.style.top = '24px';
+                tooltip.style.left = '100%';
+                tooltip.style.transform = 'translateX(-50%)';
+        }
         return;
     }
 
@@ -90,6 +114,7 @@ function applyTooltipPosition(
     const topPos = placeAbove
         ? Math.max(16, spaceAbove - 160)
         : Math.min(viewportHeight - 180, belowTop);
+    /** Clamp left position to ensure tooltip is fully visible in viewport. */
     const clampedLeft = Math.max(16, Math.min(state.anchorRect.left, viewportWidth - 376));
 
     tooltip.style.top = `${Math.round(topPos)}px`;
@@ -396,7 +421,7 @@ export function mountTourDom(options: DomTourMountOptions = {}): DomTourMountCon
         nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
         nextBtn.style.opacity = nextBtn.disabled ? '0.45' : '1';
 
-        applyTooltipPosition(tooltip, state, theme.highlightPadding);
+        // applyTooltipPosition(tooltip, state, theme.highlightPadding);
     };
 
     const unsubscribe = manager.subscribe(renderState);

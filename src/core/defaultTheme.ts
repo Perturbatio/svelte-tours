@@ -13,11 +13,22 @@ export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
     tipTextColor: '#111827',
     tipTitleColor: '#000000',
     tipBorderRadius: '8px',
+    tipBorderColor: '#e5e7eb',
+    tipBorderWidth: '1px',
     tipShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
     tipMaxWidth: '360px',
     buttonBgColor: '#2563eb',
     buttonTextColor: '#ffffff',
-    zIndex: 9999
+    zIndex: 9999,
+    navPlacement: 'tooltip',
+    navBgColor: '#ffffff',
+    navTextColor: '#111827',
+    navBorderColor: '#e5e7eb',
+    navBorderWidth: '1px',
+    navPadding: '12px 24px',
+    navHeight: 'auto',
+    navLeft: 'auto',
+    navRight: 'auto'
 });
 
 export function resolveTourTheme(customTheme?: Partial<TourTheme>): TourTheme {
@@ -41,6 +52,16 @@ export function themeToCssVariables(theme: TourTheme): Record<string, string> {
         '--pt-tip-max-width': theme.tipMaxWidth,
         '--pt-button-bg-color': theme.buttonBgColor,
         '--pt-button-text-color': theme.buttonTextColor,
-        '--pt-z-index': String(theme.zIndex)
+        '--pt-z-index': String(theme.zIndex),
+        '--pt-tip-border-color': theme.tipBorderColor,
+        '--pt-tip-border-width': theme.tipBorderWidth,
+        '--pt-nav-bg-color': theme.navBgColor ?? '#ffffff',
+        '--pt-nav-text-color': theme.navTextColor ?? '#111827',
+        '--pt-nav-border-color': theme.navBorderColor ?? '#e5e7eb',
+        '--pt-nav-border-width': theme.navBorderWidth ?? '1px',
+        '--pt-nav-padding': theme.navPadding ?? '12px 24px',
+        '--pt-nav-height': theme.navHeight ?? 'auto',
+        '--pt-nav-left': theme.navLeft ?? 'auto',
+        '--pt-nav-right': theme.navRight ?? 'auto'
     };
 }

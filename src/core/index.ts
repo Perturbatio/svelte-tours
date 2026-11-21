@@ -46,6 +46,7 @@ export type {
     TourConfig,
     TourListener,
     TourManagerOptions,
+    TourNavPlacement,
     TourSection,
     TourSectionContent,
     TourTheme

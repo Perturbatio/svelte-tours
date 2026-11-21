@@ -1,6 +1,14 @@
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
 /dist
 /tmp
 /out-tsc
+.idea
 
 /node_modules
 npm-debug.log*
@@ -9,4 +17,13 @@ yarn-error.log*
 /.pnp
 .pnp.js
 
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
 .vscode/*
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

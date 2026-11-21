@@ -5,11 +5,12 @@
      * section change, and refreshes target positions on scroll and resize events.
      */
     import { untrack } from 'svelte';
-    import { observeSectionTargets, type TargetObserverController } from '../core/domObserver';
+    import { observeSectionTargets, type TargetObserverController } from '../core';
     import { tours as defaultManager, type TourManager } from '../core/TourManager';
-    import type { ActiveSectionState, TourTheme } from '../core/types';
+    import type { ActiveSectionState, TourTheme } from '../core';
     import TourOverlay from './TourOverlay.svelte';
     import TourTooltip from './TourTooltip.svelte';
+    import TourNavBar from './TourNavBar.svelte';
 
     interface Props {
         manager?: TourManager;
@@ -22,7 +23,7 @@
     let cssVars = $state<Record<string, string>>({});
     let observerController: TargetObserverController | null = null;
 
-    $effect(() => {
+    $effect.pre(() => {
         const mgr = manager;
         const unsubscribe = mgr.subscribe((nextState) => {
             activeState = nextState;
@@ -113,11 +114,30 @@
                 canGoNext={activeState.canGoNext}
                 hasNextTour={activeState.hasNextTour}
                 showRestartButton={activeState.showRestartButton}
+                navPlacement={activeState.navPlacement}
                 onPrevious={() => manager.previous()}
                 onNext={() => manager.next()}
                 onClose={() => manager.close()}
                 onRestart={() => manager.restart(activeState?.tourName)}
+                extraClasses={currentTheme.tooltipExtraClasses}
         />
+
+        {#if activeState.navPlacement === 'top' || activeState.navPlacement === 'bottom'}
+            <TourNavBar
+                    placement={activeState.navPlacement}
+                    tourTitle={activeState.section.content.title}
+                    sectionIndex={activeState.sectionIndex}
+                    totalSections={activeState.totalSections}
+                    canGoPrevious={activeState.canGoPrevious}
+                    canGoNext={activeState.canGoNext}
+                    hasNextTour={activeState.hasNextTour}
+                    showRestartButton={activeState.showRestartButton}
+                    onPrevious={() => manager.previous()}
+                    onNext={() => manager.next()}
+                    onClose={() => manager.close()}
+                    onRestart={() => manager.restart(activeState?.tourName)}
+            />
+        {/if}
     </div>
 {/if}
 

@@ -1,6 +1,8 @@
 /**
  * These types define tour definitions, nextTour chaining, grace periods, target bounding rectangles, localStorage state, theme keys, and the manager API.
  */
+export type TourNavPlacement = 'tooltip' | 'top' | 'bottom';
+
 export interface TourSectionContent {
     title: string;
     content?: string;
@@ -13,6 +15,8 @@ export interface TourSection {
     content: TourSectionContent;
     /** Optional grace period (ms) to wait for missing targets in this section. */
     targetGraceMs?: number;
+    /** Navigation bar placement override for this section. */
+    navPlacement?: TourNavPlacement;
 }
 
 export interface TourConfig {
@@ -26,6 +30,8 @@ export interface TourConfig {
     targetGraceMs?: number;
     /** Shows an optional button that resets stored state and restarts the tour. */
     showRestartButton?: boolean;
+    /** Navigation bar placement for this tour. */
+    navPlacement?: TourNavPlacement;
     sections: Record<string, TourSection>;
 }
 
@@ -35,6 +41,9 @@ export interface StoredTourState {
     lastSectionKey: string | null;
 }
 
+/**
+ * Represents a bounding box of an element.
+ */
 export interface TargetBox {
     selector: string;
     rect: {
@@ -58,6 +67,7 @@ export interface ActiveSectionState {
     targets: TargetBox[];
     anchorRect: TargetBox['rect'] | null;
     placement: TooltipPlacement;
+    navPlacement: TourNavPlacement;
     canGoPrevious: boolean;
     canGoNext: boolean;
     hasNextTour: boolean;
@@ -73,11 +83,23 @@ export interface TourTheme {
     tipTextColor: string;
     tipTitleColor: string;
     tipBorderRadius: string;
+    tipBorderColor: string;
+    tipBorderWidth: string;
     tipShadow: string;
     tipMaxWidth: string;
+    tooltipExtraClasses?: string;
     buttonBgColor: string;
     buttonTextColor: string;
     zIndex: number;
+    navPlacement?: TourNavPlacement;
+    navBgColor?: string;
+    navTextColor?: string;
+    navBorderColor?: string;
+    navBorderWidth?: string;
+    navPadding?: string;
+    navHeight?: string;
+    navLeft?: string;
+    navRight?: string;
 }
 
 export type ThemeDumpFormat = 'json' | 'js' | 'ts';

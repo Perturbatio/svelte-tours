@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { TargetBox, TooltipPlacement, TourSectionContent } from '../core/types';
+    import type { TargetBox, TooltipPlacement, TourNavPlacement, TourSectionContent } from '../core/types';
 
     interface Props {
         content: TourSectionContent;
@@ -12,6 +12,10 @@
         canGoNext: boolean;
         hasNextTour: boolean;
         showRestartButton: boolean;
+        allowAnimation?: boolean;
+        extraClasses?: string;
+        showNav?: boolean;
+        navPlacement?: TourNavPlacement;
         onPrevious: () => void;
         onNext: () => void;
         onClose: () => void;
@@ -29,11 +33,19 @@
         canGoNext,
         hasNextTour,
         showRestartButton,
+        allowAnimation = true,
+        extraClasses = '',
+        showNav,
+        navPlacement = 'tooltip',
         onPrevious,
         onNext,
         onClose,
         onRestart
     }: Props = $props();
+
+    const shouldShowNav = $derived(
+        showNav !== undefined ? showNav : navPlacement === 'tooltip'
+    );
 
     const positionStyle = $derived.by(() => {
         if (placement === 'top-center' || !anchorRect) {
@@ -50,7 +62,12 @@
 
         const placeAbove = spaceBelow < 180 && spaceAbove > spaceBelow;
         const topPos = placeAbove ? Math.max(16, spaceAbove - 160) : Math.min(viewportHeight - 180, belowTop);
-        const clampedLeft = Math.max(16, Math.min(anchorRect.left, viewportWidth - 376));
+        let clampedLeft = Math.max(anchorRect.right, Math.min(anchorRect.left, viewportWidth - 376));
+
+        // if the left pos + the width of the tooltip exceeds the viewport width, adjust it to fit
+        if (clampedLeft + 360 > viewportWidth - 16) {
+            clampedLeft = viewportWidth - 376;
+        }
 
         return `top: ${Math.round(topPos)}px; left: ${Math.round(clampedLeft)}px;`;
     });
@@ -62,7 +79,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 <section
-        class="pt-tooltip"
+        class="pt-tooltip {allowAnimation ? 'allow-animation' : ''} {extraClasses}"
         style={positionStyle}
         role="dialog"
         aria-modal="false"
@@ -88,39 +105,41 @@
         <p class="pt-tooltip-description">{content.description}</p>
     {/if}
 
-    <div class="pt-tooltip-footer">
-        <span class="pt-step-counter">{sectionIndex + 1} / {totalSections}</span>
+    {#if shouldShowNav}
+        <div class="pt-tooltip-footer">
+            <span class="pt-step-counter">{sectionIndex + 1} / {totalSections}</span>
 
-        <div class="pt-tooltip-actions">
-            {#if showRestartButton}
+            <div class="pt-tooltip-actions">
+                {#if showRestartButton}
+                    <button
+                            type="button"
+                            class="pt-btn-secondary"
+                            onclick={onRestart}
+                    >
+                        Restart Tour
+                    </button>
+                {/if}
+
                 <button
                         type="button"
                         class="pt-btn-secondary"
-                        onclick={onRestart}
+                        onclick={onPrevious}
+                        disabled={!canGoPrevious}
                 >
-                    Restart Tour
+                    Previous
                 </button>
-            {/if}
 
-            <button
-                    type="button"
-                    class="pt-btn-secondary"
-                    onclick={onPrevious}
-                    disabled={!canGoPrevious}
-            >
-                Previous
-            </button>
-
-            <button
-                    type="button"
-                    class="pt-btn-primary"
-                    onclick={onNext}
-                    disabled={!canGoNext}
-            >
-                {nextLabel}
-            </button>
+                <button
+                        type="button"
+                        class="pt-btn-primary"
+                        onclick={onNext}
+                        disabled={!canGoNext}
+                >
+                    {nextLabel}
+                </button>
+            </div>
         </div>
-    </div>
+    {/if}
 </section>
 
 <style>
@@ -133,7 +152,12 @@
         background-color: var(--pt-tip-bg-color, #ffffff);
         color: var(--pt-tip-text-color, #111827);
         border-radius: var(--pt-tip-border-radius, 8px);
+        border: var(--pt-tip-border-width, 1px) solid var(--pt-tip-border-color, #e5e7eb);
         box-shadow: var(--pt-tip-shadow, 0 10px 25px rgba(0, 0, 0, 0.2));
+    }
+
+    .pt-tooltip.allow-animation {
+        transition: left 0.25s ease, top 0.25s ease, opacity 0.2s ease, transform 0.2s ease;
     }
 
     .pt-tooltip-header {

@@ -139,4 +139,41 @@ describe('TourManager', () => {
         eventTarget.dispatchEvent(new Event('open-profile-tour'));
         expect(manager.getActiveState()?.tourName).toBe('userProfile');
     });
+
+    it('resolves navPlacement with section > tour > theme > default hierarchy', () => {
+        manager.addTour({
+            name: 'navHierarchyTour',
+            navPlacement: 'top',
+            sections: {
+                step1: {
+                    elements: ['.step1'],
+                    content: { title: 'Step 1' }
+                },
+                step2: {
+                    elements: ['.step2'],
+                    navPlacement: 'bottom',
+                    content: { title: 'Step 2' }
+                }
+            }
+        });
+
+        manager.start('navHierarchyTour');
+        expect(manager.getActiveState()?.navPlacement).toBe('top');
+
+        manager.next();
+        expect(manager.getActiveState()?.navPlacement).toBe('bottom');
+
+        manager.setTheme({ navPlacement: 'bottom' });
+        manager.addTour({
+            name: 'themeNavTour',
+            sections: {
+                step1: {
+                    elements: ['.step1'],
+                    content: { title: 'Theme Step' }
+                }
+            }
+        });
+        manager.start('themeNavTour');
+        expect(manager.getActiveState()?.navPlacement).toBe('bottom');
+    });
 });

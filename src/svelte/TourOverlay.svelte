@@ -66,7 +66,7 @@
     .pt-overlay {
         position: fixed;
         inset: 0;
-        pointer-events: none;
+        pointer-events: auto;
         z-index: var(--pt-z-index, 9999);
     }
 

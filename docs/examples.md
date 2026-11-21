@@ -67,6 +67,7 @@ Svelte Page:
       autoStart: true,
       nextTour: 'userProfile',
       showRestartButton: true,
+      navPlacement: 'bottom',
       sections: {
         welcome: {
           elements: ['.start-tour-btn'],
@@ -77,10 +78,11 @@ Svelte Page:
         },
         helpTargets: {
           elements: ['.header-help-btn', '.sidebar-help-btn'],
+          navPlacement: 'top',
           content: {
             title: 'Help Controls',
             content: 'Both help buttons are highlighted. Elements between them stay masked.',
-            description: 'The tooltip anchors to the first matching button.'
+            description: 'The tooltip anchors to the first matching button with navigation in the top bar.'
           }
         }
       }

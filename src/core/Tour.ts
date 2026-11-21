@@ -4,7 +4,7 @@
  * validates required fields, and exposes ordered section
  * keys and lookup helpers.
  */
-import type { TourConfig, TourSection } from './types';
+import type { TourConfig, TourNavPlacement, TourSection } from './types';
 
 export class Tour {
     readonly name: string;
@@ -13,6 +13,7 @@ export class Tour {
     readonly nextTour: string | undefined;
     readonly targetGraceMs: number | undefined;
     readonly showRestartButton: boolean;
+    readonly navPlacement: TourNavPlacement | undefined;
     readonly sections: Record<string, TourSection>;
     readonly sectionKeys: string[];
 
@@ -32,6 +33,7 @@ export class Tour {
         this.nextTour = config.nextTour;
         this.targetGraceMs = config.targetGraceMs;
         this.showRestartButton = Boolean(config.showRestartButton);
+        this.navPlacement = config.navPlacement;
 
         const normalizedSections: Record<string, TourSection> = {};
         for (const key of keys) {
@@ -43,7 +45,8 @@ export class Tour {
                     content: section.content.content,
                     description: section.content.description
                 },
-                targetGraceMs: section.targetGraceMs
+                targetGraceMs: section.targetGraceMs,
+                navPlacement: section.navPlacement
             };
         }
 

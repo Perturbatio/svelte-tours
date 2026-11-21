@@ -7,10 +7,38 @@ A lightweight tour engine and Svelte 5 component for interactive UI tours. It su
 * **Svelte 5 and plain TypeScript support:** Use `<TourProvider>` in Svelte 5 apps or `mountTourDom()` with `@perturbatio/svelte-tours/core` in non-Svelte apps.
 * **Single active tour:** Starting a tour stops any other active tour so only one tour runs at a time.
 * **Multi-element cutouts:** Highlights each matching target element individually while keeping elements outside target boxes masked.
+* **Flexible navigation placement:** Choose whether tour controls render inside the tooltip (`tooltip`, default) or in a fixed navigation bar at the top or bottom of the viewport (`top` or `bottom`), configurable globally, per tour, or per section.
 * **Grace period and top-center fallback:** Waits a configurable time (`targetGraceMs`) for missing target elements, then centers the tooltip at the top of the screen if targets do not appear.
 * **Persistence and resume:** Stores `dismissed`, `completed`, and `lastSectionKey` in `localStorage`. Closing an auto-started tour prevents future auto-starts until resumed explicitly or reset with `restart()`.
 * **Tour chaining:** Set `nextTour` on a tour to move to another tour when clicking **Next** on the final section.
 * **Theme customization and CLI dump:** Configure styles through CSS custom properties (`--pt-*`) and export the default theme with `perturbatio-dump-theme`.
+
+### Navigation Placement (`navPlacement`)
+
+By default, tour navigation buttons (`Previous`, `Next`, `Restart Tour`, `Close`, and step counter) render inside the tooltip body (`navPlacement: 'tooltip'`).
+
+You can configure fixed navigation at the top or bottom of the screen by setting `navPlacement: 'top'` or `navPlacement: 'bottom'`:
+
+```ts
+// At tour level:
+tours.addTour({
+  name: 'dashboard',
+  navPlacement: 'bottom', // 'tooltip' | 'top' | 'bottom'
+  sections: {
+    intro: {
+      elements: ['.intro-header'],
+      content: { title: 'Welcome' }
+    },
+    specialStep: {
+      elements: ['.special-el'],
+      navPlacement: 'top', // per-step override
+      content: { title: 'Top Bar Navigation' }
+    }
+  }
+});
+```
+
+When fixed navigation is active, `TourTooltip` automatically hides its internal footer buttons while displaying descriptions and step content cleanly near highlighted targets.
 
 ## Installation
 

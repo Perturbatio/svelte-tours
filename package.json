@@ -1,17 +1,21 @@
 {
-  "name": "@perturbatio/svelte-tours",
+  "name": "perturbatio-svelte-tours",
   "version": "0.1.0",
   "description": "Lightweight interactive UI tour engine and Svelte 5 component with configurable CSS variable themes",
   "type": "module",
+  	"keywords": [
+		"svelte",
+		"tours"
+	],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "svelte": "./dist/index.js",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "svelte": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./core": {
-      "types": "./dist/core/index.d.ts",
-      "import": "./dist/core/index.js"
+      "types": "./src/core/index.ts",
+      "import": "./src/core/index.ts"
     }
   },
   "bin": {
@@ -27,9 +31,6 @@
     "test:watch": "vitest",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
-  "peerDependencies": {
-    "svelte": "^5.0.0"
-  },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
@@ -41,5 +42,8 @@
     "typescript": "^5.7.0",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
   }
 }

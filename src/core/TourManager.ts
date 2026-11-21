@@ -95,8 +95,10 @@ export class TourManager {
     }
 
     start(name: string, options: StartTourOptions = {}): boolean {
+        // console.log(`TourManager: Starting tour "${name}" with options:`, options);
         const tour = this.tours.get(name);
         if (!tour) {
+            console.warn(`TourManager: Tour "${name}" not found.`);
             return false;
         }
 
@@ -225,6 +227,7 @@ export class TourManager {
         const section = tour.sections[sectionKey];
         const hasNextSection = sectionIndex < tour.sectionKeys.length - 1;
         const hasNextTour = Boolean(tour.nextTour);
+        const navPlacement = section.navPlacement ?? tour.navPlacement ?? this.theme.navPlacement ?? 'tooltip';
 
         return {
             tourName: tour.name,
@@ -235,6 +238,7 @@ export class TourManager {
             targets,
             anchorRect: targets.length > 0 ? targets[0].rect : null,
             placement,
+            navPlacement,
             canGoPrevious: sectionIndex > 0,
             canGoNext: hasNextSection || hasNextTour,
             hasNextTour,
@@ -255,6 +259,7 @@ export class TourManager {
     private activateSection(tour: Tour, sectionIndex: number): boolean {
         const sectionKey = tour.getKeyAt(sectionIndex);
         if (!sectionKey) {
+            console.warn(`TourManager: Section "${sectionKey}" not found in tour "${tour.name}"`);
             return false;
         }
 
