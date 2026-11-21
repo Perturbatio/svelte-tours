@@ -3,7 +3,12 @@
  * handles nextTour chaining, listens for optional custom trigger events,
  * and updates localStorage state for auto-start, close, resume, and restart
  */
-import { DEFAULT_TOUR_THEME, resolveTourTheme, themeToCssVariables } from './defaultTheme';
+import {
+    DEFAULT_TOUR_THEME,
+    resolveTourNavLabels,
+    resolveTourTheme,
+    themeToCssVariables
+} from './defaultTheme';
 import {
     DEFAULT_STORAGE_KEY,
     getTourState,
@@ -228,6 +233,11 @@ export class TourManager {
         const hasNextSection = sectionIndex < tour.sectionKeys.length - 1;
         const hasNextTour = Boolean(tour.nextTour);
         const navPlacement = section.navPlacement ?? tour.navPlacement ?? this.theme.navPlacement ?? 'tooltip';
+        const labels = resolveTourNavLabels(
+            this.theme.labels ?? this.theme.navLabels,
+            tour.labels,
+            section.labels ?? section.navLabels ?? section.content?.labels
+        );
 
         return {
             tourName: tour.name,
@@ -239,6 +249,7 @@ export class TourManager {
             anchorRect: targets.length > 0 ? targets[0].rect : null,
             placement,
             navPlacement,
+            labels,
             canGoPrevious: sectionIndex > 0,
             canGoNext: hasNextSection || hasNextTour,
             hasNextTour,

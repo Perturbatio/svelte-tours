@@ -40,6 +40,53 @@ tours.addTour({
 
 When fixed navigation is active, `TourTooltip` automatically hides its internal footer buttons while displaying descriptions and step content cleanly near highlighted targets.
 
+### Customisable Navigation Labels (`labels`)
+
+Navigation button text and accessibility labels can be customised globally in theme, per tour, per section, or directly via component props (`<TourProvider>`, `<TourTooltip>`, and `<TourNavBar>`):
+
+* `previous` (or `prev`) — Defaults to `'Previous'`
+* `next` — Defaults to `'Next'`
+* `nextTour` — Defaults to `'Next Tour'` (rendered on the final step when chained to another tour)
+* `finish` (or `done`, `complete`) — Optional label for the next button on the final step
+* `restart` (or `restartTour`) — Defaults to `'Restart Tour'`
+* `close` — Defaults to `'Close'`
+* `closeAriaLabel` — Defaults to `'Close tour'`
+* `navAriaLabel` — Defaults to `'Tour navigation'`
+
+```ts
+// In theme:
+tours.setTheme({
+  labels: {
+    previous: 'Back',
+    next: 'Continue',
+    restart: 'Start Over',
+    close: 'Dismiss'
+  }
+});
+
+// Or per tour / per section:
+tours.addTour({
+  name: 'dashboard',
+  labels: {
+    next: 'Next Step',
+    nextTour: 'Go to Profile Tour'
+  },
+  sections: {
+    welcome: {
+      elements: ['.start-intro-tour'],
+      content: { title: 'Welcome' }
+    },
+    finalSection: {
+      elements: ['.action-btn'],
+      labels: {
+        finish: 'Get Started!'
+      },
+      content: { title: 'Finished' }
+    }
+  }
+});
+```
+
 ## Installation
 
 Install the package and its peer or build dependencies:

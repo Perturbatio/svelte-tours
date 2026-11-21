@@ -1,5 +1,6 @@
 <script lang="ts">
-    import type { TargetBox, TooltipPlacement, TourNavPlacement, TourSectionContent } from '../core/types';
+    import { resolveTourNavLabels } from '../core/defaultTheme';
+    import type { TargetBox, TooltipPlacement, TourNavLabels, TourNavPlacement, TourSectionContent } from '../core/types';
 
     interface Props {
         content: TourSectionContent;
@@ -16,6 +17,7 @@
         extraClasses?: string;
         showNav?: boolean;
         navPlacement?: TourNavPlacement;
+        labels?: TourNavLabels;
         onPrevious: () => void;
         onNext: () => void;
         onClose: () => void;
@@ -37,11 +39,14 @@
         extraClasses = '',
         showNav,
         navPlacement = 'tooltip',
+        labels,
         onPrevious,
         onNext,
         onClose,
         onRestart
     }: Props = $props();
+
+    const resolvedLabels = $derived(resolveTourNavLabels(labels));
 
     const shouldShowNav = $derived(
         showNav !== undefined ? showNav : navPlacement === 'tooltip'
@@ -72,9 +77,16 @@
         return `top: ${Math.round(topPos)}px; left: ${Math.round(clampedLeft)}px;`;
     });
 
-    const nextLabel = $derived(
-        sectionIndex === totalSections - 1 && hasNextTour ? 'Next Tour' : 'Next'
-    );
+    const nextLabel = $derived.by(() => {
+        const isLast = sectionIndex === totalSections - 1;
+        if (isLast && hasNextTour) {
+            return resolvedLabels.nextTour;
+        }
+        if (isLast && !hasNextTour && resolvedLabels.finish) {
+            return resolvedLabels.finish;
+        }
+        return resolvedLabels.next;
+    });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
@@ -91,9 +103,9 @@
                 type="button"
                 class="pt-btn-close"
                 onclick={onClose}
-                aria-label="Close tour"
+                aria-label={resolvedLabels.closeAriaLabel}
         >
-            Close
+            {resolvedLabels.close}
         </button>
     </div>
 
@@ -116,7 +128,7 @@
                             class="pt-btn-secondary"
                             onclick={onRestart}
                     >
-                        Restart Tour
+                        {resolvedLabels.restart}
                     </button>
                 {/if}
 
@@ -126,7 +138,7 @@
                         onclick={onPrevious}
                         disabled={!canGoPrevious}
                 >
-                    Previous
+                    {resolvedLabels.previous}
                 </button>
 
                 <button

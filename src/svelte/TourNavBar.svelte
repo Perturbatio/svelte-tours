@@ -1,8 +1,11 @@
 <script lang="ts">
-    import type { TourNavPlacement } from '../core/types';
+    import { resolveTourNavLabels } from '../core/defaultTheme';
+    import type { TourNavLabels, TourNavPlacement } from '../core/types';
+    type scopedNavPlacement = 'top' | 'bottom';
 
     interface Props {
-        placement: 'top' | 'bottom';
+        // ensure nav placement can only be 'top' or 'bottom' for this component
+        placement: scopedNavPlacement;
         tourTitle?: string;
         sectionIndex: number;
         totalSections: number;
@@ -11,6 +14,7 @@
         hasNextTour: boolean;
         showRestartButton: boolean;
         extraClasses?: string;
+        labels?: TourNavLabels;
         onPrevious: () => void;
         onNext: () => void;
         onClose: () => void;
@@ -27,20 +31,30 @@
         hasNextTour,
         showRestartButton,
         extraClasses = '',
+        labels,
         onPrevious,
         onNext,
         onClose,
         onRestart
     }: Props = $props();
 
-    const nextLabel = $derived(
-        sectionIndex === totalSections - 1 && hasNextTour ? 'Next Tour' : 'Next'
-    );
+    const resolvedLabels = $derived(resolveTourNavLabels(labels));
+
+    const nextLabel = $derived.by(() => {
+        const isLast = sectionIndex === totalSections - 1;
+        if (isLast && hasNextTour) {
+            return resolvedLabels.nextTour;
+        }
+        if (isLast && !hasNextTour && resolvedLabels.finish) {
+            return resolvedLabels.finish;
+        }
+        return resolvedLabels.next;
+    });
 </script>
 
 <nav
-        class="pt-navbar pt-navbar-{placement} {extraClasses}"
-        aria-label="Tour navigation"
+        class="pt-navbar {placement ? `pt-navbar-placement-${placement}` : ''} {extraClasses}"
+        aria-label={resolvedLabels.navAriaLabel}
 >
     <div class="pt-navbar-actions">
         {#if showRestartButton}
@@ -49,7 +63,7 @@
                     class="pt-btn-secondary"
                     onclick={onRestart}
             >
-                Restart Tour
+                {resolvedLabels.restart}
             </button>
         {/if}
 
@@ -59,7 +73,7 @@
                 onclick={onPrevious}
                 disabled={!canGoPrevious}
         >
-            Previous
+            {resolvedLabels.previous}
         </button>
 
         <button
@@ -75,9 +89,9 @@
                 type="button"
                 class="pt-btn-close"
                 onclick={onClose}
-                aria-label="Close tour"
+                aria-label={resolvedLabels.closeAriaLabel}
         >
-            Close
+            {resolvedLabels.close}
         </button>
     </div>
     <div class="pt-navbar-left">
@@ -107,14 +121,14 @@
         box-sizing: border-box;
     }
 
-    .pt-navbar-top {
+    :global(.pt-navbar-placement-top) {
         top: 0;
         border-top: none;
         border-left: none;
         border-right: none;
     }
 
-    .pt-navbar-bottom {
+    :global(.pt-navbar-placement-bottom) {
         bottom: 0;
         border-bottom: none;
         border-left: none;

@@ -176,4 +176,52 @@ describe('TourManager', () => {
         manager.start('themeNavTour');
         expect(manager.getActiveState()?.navPlacement).toBe('bottom');
     });
+
+    it('resolves nav labels with section > tour > theme > default hierarchy and supports aliases', () => {
+        manager.setTheme({
+            labels: {
+                previous: 'Back (Theme)',
+                next: 'Forward (Theme)',
+                close: 'Dismiss (Theme)'
+            }
+        });
+
+        manager.addTour({
+            name: 'labelsHierarchyTour',
+            labels: {
+                next: 'Forward (Tour)',
+                restart: 'Begin Again (Tour)'
+            },
+            sections: {
+                step1: {
+                    elements: ['.step1'],
+                    content: { title: 'Step 1' }
+                },
+                step2: {
+                    elements: ['.step2'],
+                    labels: {
+                        next: 'Proceed (Section)',
+                        prev: 'Go Back (Section Alias)',
+                        finish: 'Done (Section)'
+                    },
+                    content: { title: 'Step 2' }
+                }
+            }
+        });
+
+        manager.start('labelsHierarchyTour');
+        const state1 = manager.getActiveState();
+        expect(state1?.labels.previous).toBe('Back (Theme)');
+        expect(state1?.labels.next).toBe('Forward (Tour)');
+        expect(state1?.labels.restart).toBe('Begin Again (Tour)');
+        expect(state1?.labels.close).toBe('Dismiss (Theme)');
+
+        manager.next();
+        const state2 = manager.getActiveState();
+        expect(state2?.labels.previous).toBe('Go Back (Section Alias)');
+        expect(state2?.labels.next).toBe('Proceed (Section)');
+        expect(state2?.labels.finish).toBe('Done (Section)');
+        expect(state2?.labels.restart).toBe('Begin Again (Tour)');
+        expect(state2?.labels.close).toBe('Dismiss (Theme)');
+    });
 });

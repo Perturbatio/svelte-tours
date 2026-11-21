@@ -2,7 +2,69 @@
  * This module defines the default TourTheme values, merges custom theme overrides,
  * and formats the theme as CSS custom properties (--pt-*)
  **/
-import type {TourTheme} from './types';
+import type { ResolvedTourNavLabels, TourNavLabels, TourTheme } from './types';
+
+export const DEFAULT_NAV_LABELS: Readonly<ResolvedTourNavLabels> = Object.freeze({
+    previous: 'Previous',
+    next: 'Next',
+    nextTour: 'Next Tour',
+    restart: 'Restart Tour',
+    close: 'Close',
+    closeAriaLabel: 'Close tour',
+    navAriaLabel: 'Tour navigation'
+});
+
+export function resolveTourNavLabels(
+    ...sources: (TourNavLabels | undefined)[]
+): ResolvedTourNavLabels {
+    let previous = DEFAULT_NAV_LABELS.previous;
+    let next = DEFAULT_NAV_LABELS.next;
+    let nextTour = DEFAULT_NAV_LABELS.nextTour;
+    let finish = DEFAULT_NAV_LABELS.finish;
+    let restart = DEFAULT_NAV_LABELS.restart;
+    let close = DEFAULT_NAV_LABELS.close;
+    let closeAriaLabel: string | undefined;
+    let navAriaLabel = DEFAULT_NAV_LABELS.navAriaLabel;
+
+    for (const src of sources) {
+        if (!src) continue;
+        if (src.previous !== undefined || src.prev !== undefined) {
+            previous = src.previous ?? src.prev!;
+        }
+        if (src.next !== undefined) {
+            next = src.next;
+        }
+        if (src.nextTour !== undefined) {
+            nextTour = src.nextTour;
+        }
+        if (src.finish !== undefined || src.done !== undefined || src.complete !== undefined) {
+            finish = src.finish ?? src.done ?? src.complete;
+        }
+        if (src.restart !== undefined || src.restartTour !== undefined) {
+            restart = src.restart ?? src.restartTour!;
+        }
+        if (src.close !== undefined) {
+            close = src.close;
+        }
+        if (src.closeAriaLabel !== undefined) {
+            closeAriaLabel = src.closeAriaLabel;
+        }
+        if (src.navAriaLabel !== undefined) {
+            navAriaLabel = src.navAriaLabel;
+        }
+    }
+
+    return {
+        previous,
+        next,
+        nextTour,
+        finish,
+        restart,
+        close,
+        closeAriaLabel: closeAriaLabel ?? (close !== 'Close' ? `${close} tour` : DEFAULT_NAV_LABELS.closeAriaLabel),
+        navAriaLabel
+    };
+}
 
 export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
     maskBgColor: '#000000',
@@ -20,6 +82,7 @@ export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
     buttonBgColor: '#2563eb',
     buttonTextColor: '#ffffff',
     zIndex: 9999,
+    labels: { ...DEFAULT_NAV_LABELS },
     navPlacement: 'tooltip',
     navBgColor: '#ffffff',
     navTextColor: '#111827',
@@ -34,7 +97,10 @@ export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
 export function resolveTourTheme(customTheme?: Partial<TourTheme>): TourTheme {
     return {
         ...DEFAULT_TOUR_THEME,
-        ...customTheme
+        ...customTheme,
+        labels: customTheme?.labels || customTheme?.navLabels
+            ? resolveTourNavLabels(DEFAULT_NAV_LABELS, customTheme.labels ?? customTheme.navLabels)
+            : DEFAULT_TOUR_THEME.labels
     };
 }
 

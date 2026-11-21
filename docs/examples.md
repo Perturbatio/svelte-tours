@@ -68,6 +68,11 @@ Svelte Page:
       nextTour: 'userProfile',
       showRestartButton: true,
       navPlacement: 'bottom',
+      labels: {
+        next: 'Next',
+        nextTour: 'Explore Profile',
+        restart: 'Reset Dashboard'
+      },
       sections: {
         welcome: {
           elements: ['.start-tour-btn'],
@@ -79,6 +84,10 @@ Svelte Page:
         helpTargets: {
           elements: ['.header-help-btn', '.sidebar-help-btn'],
           navPlacement: 'top',
+          labels: {
+            prev: 'Go Back',
+            nextTour: 'Proceed to Profile Tour'
+          },
           content: {
             title: 'Help Controls',
             content: 'Both help buttons are highlighted. Elements between them stay masked.',

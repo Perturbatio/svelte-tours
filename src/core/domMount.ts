@@ -406,17 +406,28 @@ export function mountTourDom(options: DomTourMountOptions = {}): DomTourMountCon
             descEl.style.display = 'none';
         }
 
+        const labels = state.labels;
+        closeBtn.textContent = labels.close;
+        closeBtn.setAttribute('aria-label', labels.closeAriaLabel);
+
         counter.textContent = `${state.sectionIndex + 1} / ${state.totalSections}`;
 
+        restartBtn.textContent = labels.restart;
         restartBtn.style.display = state.showRestartButton ? '' : 'none';
 
+        prevBtn.textContent = labels.previous;
         prevBtn.disabled = !state.canGoPrevious;
         prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
         prevBtn.style.opacity = prevBtn.disabled ? '0.45' : '1';
 
-        const isLastWithNextTour =
-            state.sectionIndex === state.totalSections - 1 && state.hasNextTour;
-        nextBtn.textContent = isLastWithNextTour ? 'Next Tour' : 'Next';
+        const isLast = state.sectionIndex === state.totalSections - 1;
+        if (isLast && state.hasNextTour) {
+            nextBtn.textContent = labels.nextTour;
+        } else if (isLast && !state.hasNextTour && labels.finish) {
+            nextBtn.textContent = labels.finish;
+        } else {
+            nextBtn.textContent = labels.next;
+        }
         nextBtn.disabled = !state.canGoNext;
         nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
         nextBtn.style.opacity = nextBtn.disabled ? '0.45' : '1';

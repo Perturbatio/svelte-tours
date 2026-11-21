@@ -7,16 +7,17 @@
     import { untrack } from 'svelte';
     import { observeSectionTargets, type TargetObserverController } from '../core';
     import { tours as defaultManager, type TourManager } from '../core/TourManager';
-    import type { ActiveSectionState, TourTheme } from '../core';
+    import type { ActiveSectionState, TourNavLabels, TourTheme } from '../core';
     import TourOverlay from './TourOverlay.svelte';
     import TourTooltip from './TourTooltip.svelte';
     import TourNavBar from './TourNavBar.svelte';
 
     interface Props {
         manager?: TourManager;
+        labels?: TourNavLabels;
     }
 
-    let { manager = defaultManager }: Props = $props();
+    let { manager = defaultManager, labels: customLabels }: Props = $props();
 
     let activeState = $state<ActiveSectionState | null>(null);
     let currentTheme = $state<TourTheme>(defaultManager.getTheme());
@@ -115,6 +116,7 @@
                 hasNextTour={activeState.hasNextTour}
                 showRestartButton={activeState.showRestartButton}
                 navPlacement={activeState.navPlacement}
+                labels={customLabels ? { ...activeState.labels, ...customLabels } : activeState.labels}
                 onPrevious={() => manager.previous()}
                 onNext={() => manager.next()}
                 onClose={() => manager.close()}
@@ -132,6 +134,7 @@
                     canGoNext={activeState.canGoNext}
                     hasNextTour={activeState.hasNextTour}
                     showRestartButton={activeState.showRestartButton}
+                    labels={customLabels ? { ...activeState.labels, ...customLabels } : activeState.labels}
                     onPrevious={() => manager.previous()}
                     onNext={() => manager.next()}
                     onClose={() => manager.close()}
