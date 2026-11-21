@@ -33,6 +33,7 @@ interface ActiveSession {
     sectionIndex: number;
     targets: TargetBox[];
     placement: TooltipPlacement;
+    stepId: number;
 }
 
 export class TourManager {
@@ -45,6 +46,7 @@ export class TourManager {
 
     private theme: TourTheme = { ...DEFAULT_TOUR_THEME };
     private activeSession: ActiveSession | null = null;
+    private stepSequence = 0;
 
     constructor(options: TourManagerOptions = {}) {
         this.storageKey = options.storageKey ?? DEFAULT_STORAGE_KEY;
@@ -253,7 +255,8 @@ export class TourManager {
             canGoPrevious: sectionIndex > 0,
             canGoNext: hasNextSection || hasNextTour,
             hasNextTour,
-            showRestartButton: tour.showRestartButton
+            showRestartButton: tour.showRestartButton,
+            stepId: this.activeSession.stepId
         };
     }
 
@@ -283,11 +286,13 @@ export class TourManager {
             this.storageKey
         );
 
+        this.stepSequence += 1;
         this.activeSession = {
             tour,
             sectionIndex,
             targets: [],
-            placement: 'top-center'
+            placement: 'top-center',
+            stepId: this.stepSequence
         };
 
         this.emit();

@@ -121,6 +121,7 @@ export interface ActiveSectionState {
     canGoNext: boolean;
     hasNextTour: boolean;
     showRestartButton: boolean;
+    stepId: number;
 }
 
 export interface TourTheme {

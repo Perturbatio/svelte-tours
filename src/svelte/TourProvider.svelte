@@ -38,7 +38,7 @@
     });
 
     const activeSectionId = $derived(
-        activeState ? `${activeState.tourName}:${activeState.sectionKey}` : null
+        activeState ? `${activeState.tourName}:${activeState.sectionKey}:${activeState.stepId}` : null
     );
 
     const cssVarsStyle = $derived(

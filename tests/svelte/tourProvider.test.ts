@@ -1,5 +1,5 @@
 import { mount, unmount } from 'svelte';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TourManager } from '../../src';
 import TourProvider from '../../src/svelte/TourProvider.svelte';
 
@@ -225,5 +225,196 @@ describe('TourProvider with custom nav labels and placement', () => {
         await Promise.resolve();
 
         expect(manager.getActiveState()?.tourName).toBe('secondaryTour');
+    });
+});
+
+describe('TourProvider restart positioning', () => {
+    let container: HTMLElement;
+    let manager: TourManager;
+    let app: Record<string, unknown>;
+
+    beforeEach(() => {
+        localStorage.clear();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        manager = new TourManager({ storageKey: 'test_svelte_tours_restart' });
+    });
+
+    afterEach(() => {
+        unmount(app);
+        vi.restoreAllMocks();
+        container.remove();
+    });
+
+    it('positions tooltip at the first section element when restarted whilst on the first section', async () => {
+        const target1 = document.createElement('div');
+        target1.className = 'section-target-1';
+        target1.textContent = 'Section 1 Target';
+        document.body.appendChild(target1);
+
+        const target2 = document.createElement('div');
+        target2.className = 'section-target-2';
+        target2.textContent = 'Section 2 Target';
+        document.body.appendChild(target2);
+
+        const fullRect1 = {
+            left: 100,
+            top: 200,
+            width: 150,
+            height: 50,
+            right: 250,
+            bottom: 250,
+            x: 100,
+            y: 200,
+            toJSON: () => fullRect1
+        };
+        vi.spyOn(target1, 'getBoundingClientRect').mockReturnValue(fullRect1 as DOMRect);
+
+        const fullRect2 = {
+            left: 300,
+            top: 400,
+            width: 150,
+            height: 50,
+            right: 450,
+            bottom: 450,
+            x: 300,
+            y: 400,
+            toJSON: () => fullRect2
+        };
+        vi.spyOn(target2, 'getBoundingClientRect').mockReturnValue(fullRect2 as DOMRect);
+
+        manager.addTour({
+            name: 'restartTour',
+            showRestartButton: true,
+            sections: {
+                step1: {
+                    elements: ['.section-target-1'],
+                    targetGraceMs: 0,
+                    content: { title: 'First Section' }
+                },
+                step2: {
+                    elements: ['.section-target-2'],
+                    targetGraceMs: 0,
+                    content: { title: 'Second Section' }
+                }
+            }
+        });
+        manager.start('restartTour');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: { manager }
+        });
+
+        await Promise.resolve();
+
+        const tooltip = container.querySelector('.pt-tooltip') as HTMLElement;
+        expect(tooltip).not.toBeNull();
+        expect(manager.getActiveState()?.placement).toBe('anchored');
+        expect(manager.getActiveState()?.targets).toHaveLength(1);
+        expect(tooltip.style.top).not.toBe('24px');
+
+        // Now restart while on the first section
+        const restartBtn = Array.from(container.querySelectorAll('button')).find(
+            (b) => b.textContent?.trim() === 'Restart Tour'
+        ) as HTMLButtonElement;
+        expect(restartBtn).toBeDefined();
+
+        restartBtn.click();
+        await Promise.resolve();
+
+        expect(manager.getActiveState()?.sectionKey).toBe('step1');
+        expect(manager.getActiveState()?.placement).toBe('anchored');
+        expect(manager.getActiveState()?.targets).toHaveLength(1);
+        expect(tooltip.style.top).not.toBe('24px');
+
+        target1.remove();
+        target2.remove();
+    });
+
+    it('positions tooltip at the first section element when restarted from another section', async () => {
+        const target1 = document.createElement('div');
+        target1.className = 'section-target-1';
+        target1.textContent = 'Section 1 Target';
+        document.body.appendChild(target1);
+
+        const target2 = document.createElement('div');
+        target2.className = 'section-target-2';
+        target2.textContent = 'Section 2 Target';
+        document.body.appendChild(target2);
+
+        const fullRect1 = {
+            left: 100,
+            top: 200,
+            width: 150,
+            height: 50,
+            right: 250,
+            bottom: 250,
+            x: 100,
+            y: 200,
+            toJSON: () => fullRect1
+        };
+        vi.spyOn(target1, 'getBoundingClientRect').mockReturnValue(fullRect1 as DOMRect);
+
+        const fullRect2 = {
+            left: 300,
+            top: 400,
+            width: 150,
+            height: 50,
+            right: 450,
+            bottom: 450,
+            x: 300,
+            y: 400,
+            toJSON: () => fullRect2
+        };
+        vi.spyOn(target2, 'getBoundingClientRect').mockReturnValue(fullRect2 as DOMRect);
+
+        manager.addTour({
+            name: 'restartTourFromStep2',
+            showRestartButton: true,
+            sections: {
+                step1: {
+                    elements: ['.section-target-1'],
+                    targetGraceMs: 0,
+                    content: { title: 'First Section' }
+                },
+                step2: {
+                    elements: ['.section-target-2'],
+                    targetGraceMs: 0,
+                    content: { title: 'Second Section' }
+                }
+            }
+        });
+        manager.start('restartTourFromStep2');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: { manager }
+        });
+
+        await Promise.resolve();
+
+        // Move to step 2
+        manager.next();
+        await Promise.resolve();
+        expect(manager.getActiveState()?.sectionKey).toBe('step2');
+
+        // Restart from step 2
+        const restartBtn = Array.from(container.querySelectorAll('button')).find(
+            (b) => b.textContent?.trim() === 'Restart Tour'
+        ) as HTMLButtonElement;
+        expect(restartBtn).toBeDefined();
+
+        restartBtn.click();
+        await Promise.resolve();
+
+        const tooltip = container.querySelector('.pt-tooltip') as HTMLElement;
+        expect(manager.getActiveState()?.sectionKey).toBe('step1');
+        expect(manager.getActiveState()?.placement).toBe('anchored');
+        expect(manager.getActiveState()?.targets).toHaveLength(1);
+        expect(tooltip.style.top).not.toBe('24px');
+
+        target1.remove();
+        target2.remove();
     });
 });

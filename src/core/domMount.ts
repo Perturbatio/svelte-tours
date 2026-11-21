@@ -330,6 +330,7 @@ export function mountTourDom(options: DomTourMountOptions = {}): DomTourMountCon
     let observerController: TargetObserverController | null = null;
     let observedSectionKey: string | null = null;
     let observedTourName: string | null = null;
+    let observedStepId: number | null = null;
     let mountedInDom = false;
     let currentRenderState: ActiveSectionState | null = null;
 
@@ -340,6 +341,7 @@ export function mountTourDom(options: DomTourMountOptions = {}): DomTourMountCon
         }
         observedSectionKey = null;
         observedTourName = null;
+        observedStepId = null;
     };
 
     const handleViewportChange = (): void => {
@@ -366,10 +368,15 @@ export function mountTourDom(options: DomTourMountOptions = {}): DomTourMountCon
             mountedInDom = true;
         }
 
-        if (observedTourName !== state.tourName || observedSectionKey !== state.sectionKey) {
+        if (
+            observedTourName !== state.tourName ||
+            observedSectionKey !== state.sectionKey ||
+            observedStepId !== state.stepId
+        ) {
             stopObserver();
             observedTourName = state.tourName;
             observedSectionKey = state.sectionKey;
+            observedStepId = state.stepId;
 
             const graceMs = manager.getGracePeriodMs(state.section);
             observerController = observeSectionTargets(state.section.elements, {
