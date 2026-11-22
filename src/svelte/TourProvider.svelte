@@ -4,10 +4,20 @@
      * applies theme CSS variables, starts the grace-period target observer on each active
      * section change, and refreshes target positions on scroll and resize events.
      */
-    import { untrack } from 'svelte';
-    import { observeSectionTargets, type TargetObserverController } from '../core';
+    import { untrack, type Snippet } from 'svelte';
+    import {
+        observeSectionTargets,
+        resolveTourNavControls,
+        type ActiveSectionState,
+        type NavButtonActionContext,
+        type NavButtonContext,
+        type StepCounterContext,
+        type TargetObserverController,
+        type TourNavControls,
+        type TourNavLabels,
+        type TourTheme
+    } from '../core';
     import { tours as defaultManager, type TourManager } from '../core/TourManager';
-    import type { ActiveSectionState, TourNavLabels, TourTheme } from '../core';
     import TourOverlay from './TourOverlay.svelte';
     import TourTooltip from './TourTooltip.svelte';
     import TourNavBar from './TourNavBar.svelte';
@@ -15,9 +25,33 @@
     interface Props {
         manager?: TourManager;
         labels?: TourNavLabels;
+        controls?: TourNavControls;
+        // Svelte 5 Snippets
+        prevLabel?: Snippet<[NavButtonContext]>;
+        nextLabel?: Snippet<[NavButtonContext]>;
+        closeLabel?: Snippet<[NavButtonContext]>;
+        restartLabel?: Snippet<[NavButtonContext]>;
+        prevButton?: Snippet<[NavButtonActionContext]>;
+        nextButton?: Snippet<[NavButtonActionContext]>;
+        closeButton?: Snippet<[NavButtonActionContext]>;
+        restartButton?: Snippet<[NavButtonActionContext]>;
+        stepCounter?: Snippet<[StepCounterContext]>;
     }
 
-    let { manager = defaultManager, labels: customLabels }: Props = $props();
+    let {
+        manager = defaultManager,
+        labels: customLabels,
+        controls: customControls,
+        prevLabel,
+        nextLabel,
+        closeLabel,
+        restartLabel,
+        prevButton,
+        nextButton,
+        closeButton,
+        restartButton,
+        stepCounter
+    }: Props = $props();
 
     let activeState = $state<ActiveSectionState | null>(null);
     let currentTheme = $state<TourTheme>(defaultManager.getTheme());
@@ -45,6 +79,14 @@
         Object.entries(cssVars)
             .map(([key, value]) => `${key}: ${value}`)
             .join('; ')
+    );
+
+    const effectiveControls = $derived(
+        activeState
+            ? customControls
+                ? resolveTourNavControls(activeState.controls, customControls)
+                : activeState.controls
+            : undefined
     );
 
     function clearObserver(): void {
@@ -109,12 +151,14 @@
                 placement={activeState.placement}
                 anchorRect={activeState.anchorRect}
                 padding={currentTheme.highlightPadding}
+                tourName={activeState.tourName}
                 sectionIndex={activeState.sectionIndex}
                 totalSections={activeState.totalSections}
                 canGoPrevious={activeState.canGoPrevious}
                 canGoNext={activeState.canGoNext}
                 hasNextTour={activeState.hasNextTour}
                 showRestartButton={activeState.showRestartButton}
+                controls={effectiveControls}
                 navPlacement={activeState.navPlacement}
                 labels={customLabels ? { ...activeState.labels, ...customLabels } : activeState.labels}
                 onPrevious={() => manager.previous()}
@@ -122,23 +166,43 @@
                 onClose={() => manager.close()}
                 onRestart={() => manager.restart(activeState?.tourName)}
                 extraClasses={currentTheme.tooltipExtraClasses}
+                {prevLabel}
+                {nextLabel}
+                {closeLabel}
+                {restartLabel}
+                {prevButton}
+                {nextButton}
+                {closeButton}
+                {restartButton}
+                {stepCounter}
         />
 
         {#if activeState.navPlacement === 'top' || activeState.navPlacement === 'bottom'}
             <TourNavBar
                     placement={activeState.navPlacement}
                     tourTitle={activeState.section.content.title}
+                    tourName={activeState.tourName}
                     sectionIndex={activeState.sectionIndex}
                     totalSections={activeState.totalSections}
                     canGoPrevious={activeState.canGoPrevious}
                     canGoNext={activeState.canGoNext}
                     hasNextTour={activeState.hasNextTour}
                     showRestartButton={activeState.showRestartButton}
+                    controls={effectiveControls}
                     labels={customLabels ? { ...activeState.labels, ...customLabels } : activeState.labels}
                     onPrevious={() => manager.previous()}
                     onNext={() => manager.next()}
                     onClose={() => manager.close()}
                     onRestart={() => manager.restart(activeState?.tourName)}
+                    {prevLabel}
+                    {nextLabel}
+                    {closeLabel}
+                    {restartLabel}
+                    {prevButton}
+                    {nextButton}
+                    {closeButton}
+                    {restartButton}
+                    {stepCounter}
             />
         {/if}
     </div>

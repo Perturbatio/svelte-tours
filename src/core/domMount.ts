@@ -3,13 +3,13 @@
  * the grace period, updates cutouts on scroll and resize, and renders the mask
  * and tooltip using DOM elements and --pt-* CSS custom properties.
  *
- * Projects that do not use Svelte can import it from @perturbatio/svelte-tours/core to render
+ * Projects that do not use Svelte can import it from perturbatio-svelte-tours/core to render
  * the overlay mask, target cutouts, and tooltip card directly into the DOM.
  */
 /**
  * Example usage without Svelte:
  * ```JS
- * import { mountTourDom, tours } from '@perturbatio/svelte-tours/core';
+ * import { mountTourDom, tours } from 'perturbatio-svelte-tours/core';
  *
  * const controller = mountTourDom();
  *

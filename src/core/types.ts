@@ -41,12 +41,66 @@ export interface ResolvedTourNavLabels {
     navAriaLabel: string;
 }
 
+export interface TourNavControls {
+    /** Whether to show the previous button. Defaults to true. */
+    showPrevious?: boolean;
+    /** Alias for showPrevious. */
+    showPrev?: boolean;
+    /** Whether to show the next button. Defaults to true. */
+    showNext?: boolean;
+    /** Whether to show the close button. Defaults to true. */
+    showClose?: boolean;
+    /** Whether to show the restart button. Defaults to false. */
+    showRestart?: boolean;
+    /** Alias for showRestart. */
+    showRestartButton?: boolean;
+    /** Whether to show the step counter (1 / N). Defaults to true. */
+    showStepCounter?: boolean;
+    /** Alias for showStepCounter. */
+    showCounter?: boolean;
+    /** Whether to show the tour title. Defaults to true. */
+    showTourTitle?: boolean;
+}
+
+export interface ResolvedTourNavControls {
+    showPrevious: boolean;
+    showNext: boolean;
+    showClose: boolean;
+    showRestart: boolean;
+    showStepCounter: boolean;
+    showTourTitle: boolean;
+}
+
+export interface NavButtonContext {
+    label: string;
+    disabled: boolean;
+    sectionIndex: number;
+    totalSections: number;
+    tourName: string;
+    hasNextTour: boolean;
+    isLastSection: boolean;
+}
+
+export interface NavButtonActionContext extends NavButtonContext {
+    onclick: () => void;
+    class: string;
+    ariaLabel?: string;
+}
+
+export interface StepCounterContext {
+    sectionIndex: number;
+    totalSections: number;
+    tourName: string;
+}
+
 export interface TourSectionContent {
     title: string;
     content?: string;
     description?: string;
     /** Optional navigation button labels override for this section. */
     labels?: TourNavLabels;
+    /** Optional navigation control visibility override for this section. */
+    controls?: TourNavControls;
 }
 
 export interface TourSection {
@@ -61,6 +115,19 @@ export interface TourSection {
     labels?: TourNavLabels;
     /** Alias for labels. */
     navLabels?: TourNavLabels;
+    /** Optional navigation control visibility override for this section. */
+    controls?: TourNavControls;
+    /** Alias for controls. */
+    navControls?: TourNavControls;
+    showPrevious?: boolean;
+    showPrev?: boolean;
+    showNext?: boolean;
+    showClose?: boolean;
+    showRestart?: boolean;
+    showRestartButton?: boolean;
+    showStepCounter?: boolean;
+    showCounter?: boolean;
+    showTourTitle?: boolean;
 }
 
 export interface TourConfig {
@@ -80,6 +147,18 @@ export interface TourConfig {
     labels?: TourNavLabels;
     /** Alias for labels. */
     navLabels?: TourNavLabels;
+    /** Navigation control visibility settings for this tour. */
+    controls?: TourNavControls;
+    /** Alias for controls. */
+    navControls?: TourNavControls;
+    showPrevious?: boolean;
+    showPrev?: boolean;
+    showNext?: boolean;
+    showClose?: boolean;
+    showRestart?: boolean;
+    showStepCounter?: boolean;
+    showCounter?: boolean;
+    showTourTitle?: boolean;
     sections: Record<string, TourSection>;
 }
 
@@ -117,6 +196,7 @@ export interface ActiveSectionState {
     placement: TooltipPlacement;
     navPlacement: TourNavPlacement;
     labels: ResolvedTourNavLabels;
+    controls: ResolvedTourNavControls;
     canGoPrevious: boolean;
     canGoNext: boolean;
     hasNextTour: boolean;
@@ -143,6 +223,17 @@ export interface TourTheme {
     zIndex: number;
     labels?: TourNavLabels;
     navLabels?: TourNavLabels;
+    controls?: TourNavControls;
+    navControls?: TourNavControls;
+    showPrevious?: boolean;
+    showPrev?: boolean;
+    showNext?: boolean;
+    showClose?: boolean;
+    showRestart?: boolean;
+    showRestartButton?: boolean;
+    showStepCounter?: boolean;
+    showCounter?: boolean;
+    showTourTitle?: boolean;
     navPlacement?: TourNavPlacement;
     navBgColor?: string;
     navTextColor?: string;

@@ -1,11 +1,219 @@
 
-Svelte Page:
+# Examples
 
-```sveltehtml
+This guide contains examples for `@perturbatio/svelte-tours`.
+
+---
+
+## 1. Simple Example: HTML Labels and Control Visibility
+
+Use this example to:
+- Show or hide specific navigation buttons.
+- Render SVG icons or HTML markup inside button labels without extra Svelte code.
+
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { TourProvider, tours } from '@perturbatio/svelte-tours';
+
+  onMount(() => {
+    tours.addTour({
+      name: 'simple-controls-tour',
+      autoStart: true,
+      // Enable restart button for the entire tour
+      controls: {
+        showRestart: true
+      },
+      // Use HTML markup and icons in labels
+      labels: {
+        previous: '<span>&larr;</span> Back',
+        next: 'Next <span>&rarr;</span>',
+        restart: '<span>&#x21bb;</span> Restart Tour'
+      },
+      sections: {
+        welcomeStep: {
+          elements: ['.welcome-box'],
+          // Hide previous button on the first step
+          controls: {
+            showPrevious: false
+          },
+          content: {
+            title: 'Welcome to the App',
+            content: 'This step hides the Previous button and uses HTML labels.'
+          }
+        },
+        actionStep: {
+          elements: ['.main-action'],
+          labels: {
+            finish: '<strong>Finish &amp; Start</strong>'
+          },
+          content: {
+            title: 'Main Feature',
+            content: 'Click Finish when you complete this step.'
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<div class="page">
+  <div class="welcome-box">Welcome Area</div>
+  <button type="button" class="main-action">Get Started</button>
+</div>
+
+<TourProvider manager={tours} />
+```
+
+---
+
+## 2. Substantial Example: Svelte 5 Snippets for Custom Buttons and UI
+
+Use this example to:
+- Render custom Svelte components (such as icons) inside default buttons.
+- Replace button elements completely with your own design system components.
+- Customize the step counter format.
+
+```svelte
 <script lang="ts">
   import { onMount } from 'svelte';
   import { TourProvider, tours, type TourTheme } from '@perturbatio/svelte-tours';
-  import { writable as $state } from 'svelte/store';
+
+  const theme: Partial<TourTheme> = {
+    maskBgColor: '#0f172a',
+    maskTransparency: 0.65,
+    buttonBgColor: '#0284c7',
+    buttonTextColor: '#ffffff'
+  };
+
+  onMount(() => {
+    tours.setTheme(theme);
+
+    tours.addTour({
+      name: 'custom-snippets-tour',
+      autoStart: true,
+      nextTour: 'advanced-features',
+      controls: {
+        showRestart: true,
+        showStepCounter: true
+      },
+      sections: {
+        header: {
+          elements: ['.app-header'],
+          content: {
+            title: 'Application Navigation',
+            content: 'Notice the custom icons, buttons, and step counter below.'
+          }
+        },
+        search: {
+          elements: ['.search-bar'],
+          content: {
+            title: 'Global Search',
+            content: 'Type anywhere to search records.'
+          }
+        },
+        finish: {
+          elements: ['.profile-menu'],
+          labels: {
+            nextTour: 'Continue to Features'
+          },
+          content: {
+            title: 'Account Settings',
+            content: 'Manage your profile and preferences.'
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<!-- App UI -->
+<div class="app-layout">
+  <header class="app-header">Header</header>
+  <input class="search-bar" placeholder="Search..." />
+  <div class="profile-menu">Profile</div>
+</div>
+
+<!-- Tour Provider with Custom Svelte 5 Snippets -->
+<TourProvider manager={tours}>
+  <!-- Custom label snippet with dynamic icons -->
+  {#snippet nextLabel({ label, isLastSection, hasNextTour })}
+    <span class="btn-content">
+      <span>{label}</span>
+      {#if isLastSection && hasNextTour}
+        <span class="icon">➔</span>
+      {:else if isLastSection}
+        <span class="icon">✓</span>
+      {:else}
+        <span class="icon">›</span>
+      {/if}
+    </span>
+  {/snippet}
+
+  <!-- Full replacement snippet for Previous button -->
+  {#snippet prevButton({ label, onclick, disabled, class: className })}
+    <button
+      type="button"
+      class="{className} custom-prev-btn"
+      {onclick}
+      {disabled}
+      aria-label="Go to previous step"
+    >
+      ‹ {label}
+    </button>
+  {/snippet}
+
+  <!-- Full replacement snippet for Step Counter -->
+  {#snippet stepCounter({ sectionIndex, totalSections, tourName })}
+    <div class="step-pill">
+      <span class="tour-tag">{tourName}</span>
+      <span class="step-badge">{sectionIndex + 1} / {totalSections}</span>
+    </div>
+  {/snippet}
+</TourProvider>
+
+<style>
+  .btn-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .icon {
+    font-weight: bold;
+  }
+  .custom-prev-btn {
+    border-style: dashed;
+  }
+  .step-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+  .tour-tag {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    opacity: 0.7;
+  }
+  .step-badge {
+    font-weight: 600;
+  }
+</style>
+```
+
+---
+
+## 3. Dynamic Events and Fixed Top/Bottom Navigation
+
+Use this example to:
+- Move navigation into a fixed top or bottom bar.
+- Wait for elements that render after an API call or user action (`targetGraceMs`).
+- Start tours from browser events.
+
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { TourProvider, tours, type TourTheme } from '@perturbatio/svelte-tours';
 
   let showLatePanel = $state(false);
 
@@ -177,11 +385,16 @@ Svelte Page:
 </style>
 ```
 
-Without svelte:
+---
+
+## 4. Vanilla JavaScript / TypeScript (Non-Svelte) Usage
+
+Use `mountTourDom()` from `@perturbatio/svelte-tours/core` in projects without Svelte:
 
 ```ts
 import { mountTourDom, tours } from '@perturbatio/svelte-tours/core';
 
+// Mount the DOM overlay controller
 const controller = mountTourDom({
   container: document.body,
   manager: tours
@@ -195,6 +408,13 @@ tours.setTheme({
 tours.addTour({
   name: 'appTour',
   autoStart: true,
+  controls: {
+    showRestart: true
+  },
+  labels: {
+    previous: '&larr; Previous',
+    next: 'Next &rarr;'
+  },
   sections: {
     step1: {
       elements: ['.action-button'],
@@ -206,25 +426,6 @@ tours.addTour({
   }
 });
 
-// TODO: Call controller.destroy() when removing the tour UI.
-```
-
-```ts
-import { mountTourDom, tours } from '@perturbatio/svelte-tours/core';
-
-const controller = mountTourDom();
-
-tours.addTour({
-  name: 'dashboard',
-  autoStart: true,
-  sections: {
-    intro: {
-      elements: ['.start-intro-tour'],
-      content: { title: 'Welcome', content: 'Start here.' }
-    }
-  }
-});
-
-// Later, when cleaning up:
+// Call controller.destroy() when unmounting the UI
 // controller.destroy();
 ```

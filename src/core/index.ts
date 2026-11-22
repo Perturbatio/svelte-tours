@@ -4,8 +4,10 @@
  * TypeScript or JavaScript project
  */
 export {
+    DEFAULT_NAV_CONTROLS,
     DEFAULT_NAV_LABELS,
     DEFAULT_TOUR_THEME,
+    resolveTourNavControls,
     resolveTourNavLabels,
     resolveTourTheme,
     themeToCssVariables
@@ -40,8 +42,12 @@ export {TourManager, tours} from './TourManager';
 
 export type {
     ActiveSectionState,
+    NavButtonActionContext,
+    NavButtonContext,
+    ResolvedTourNavControls,
     ResolvedTourNavLabels,
     StartTourOptions,
+    StepCounterContext,
     StoredTourState,
     TargetBox,
     ThemeDumpFormat,
@@ -49,6 +55,7 @@ export type {
     TourConfig,
     TourListener,
     TourManagerOptions,
+    TourNavControls,
     TourNavLabels,
     TourNavPlacement,
     TourSection,

@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "Lightweight interactive UI tour engine and Svelte 5 component with configurable CSS variable themes",
   "type": "module",
-  	"keywords": [
-		"svelte",
-		"tours"
-	],
+  "keywords": [
+    "svelte",
+    "tours"
+  ],
   "exports": {
     ".": {
       "types": "./src/index.ts",

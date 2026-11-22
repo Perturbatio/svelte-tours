@@ -1,18 +1,31 @@
 <script lang="ts">
-    import { resolveTourNavLabels } from '../core/defaultTheme';
-    import type { TargetBox, TooltipPlacement, TourNavLabels, TourNavPlacement, TourSectionContent } from '../core/types';
+    import type { Snippet } from 'svelte';
+    import { resolveTourNavControls, resolveTourNavLabels } from '../core/defaultTheme';
+    import type {
+        NavButtonActionContext,
+        NavButtonContext,
+        StepCounterContext,
+        TargetBox,
+        TooltipPlacement,
+        TourNavControls,
+        TourNavLabels,
+        TourNavPlacement,
+        TourSectionContent
+    } from '../core/types';
 
     interface Props {
         content: TourSectionContent;
         placement: TooltipPlacement;
         anchorRect: TargetBox['rect'] | null;
         padding?: number;
+        tourName?: string;
         sectionIndex: number;
         totalSections: number;
         canGoPrevious: boolean;
         canGoNext: boolean;
         hasNextTour: boolean;
-        showRestartButton: boolean;
+        showRestartButton?: boolean;
+        controls?: TourNavControls;
         allowAnimation?: boolean;
         extraClasses?: string;
         showNav?: boolean;
@@ -22,6 +35,16 @@
         onNext: () => void;
         onClose: () => void;
         onRestart: () => void;
+        // Svelte 5 Snippets
+        prevLabel?: Snippet<[NavButtonContext]>;
+        nextLabel?: Snippet<[NavButtonContext]>;
+        closeLabel?: Snippet<[NavButtonContext]>;
+        restartLabel?: Snippet<[NavButtonContext]>;
+        prevButton?: Snippet<[NavButtonActionContext]>;
+        nextButton?: Snippet<[NavButtonActionContext]>;
+        closeButton?: Snippet<[NavButtonActionContext]>;
+        restartButton?: Snippet<[NavButtonActionContext]>;
+        stepCounter?: Snippet<[StepCounterContext]>;
     }
 
     let {
@@ -29,12 +52,14 @@
         placement,
         anchorRect,
         padding = 6,
+        tourName = '',
         sectionIndex,
         totalSections,
         canGoPrevious,
         canGoNext,
         hasNextTour,
         showRestartButton,
+        controls,
         allowAnimation = true,
         extraClasses = '',
         showNav,
@@ -43,10 +68,28 @@
         onPrevious,
         onNext,
         onClose,
-        onRestart
+        onRestart,
+        prevLabel,
+        nextLabel: customNextLabel,
+        closeLabel,
+        restartLabel,
+        prevButton,
+        nextButton,
+        closeButton,
+        restartButton,
+        stepCounter
     }: Props = $props();
 
     const resolvedLabels = $derived(resolveTourNavLabels(labels));
+    const resolvedControls = $derived(
+        resolveTourNavControls(
+            showRestartButton !== undefined ? { showRestart: showRestartButton } : undefined,
+            controls
+        )
+    );
+
+    const isLastSection = $derived(sectionIndex === totalSections - 1);
+    const activeTourName = $derived(tourName || content.title || '');
 
     const shouldShowNav = $derived(
         showNav !== undefined ? showNav : navPlacement === 'tooltip'
@@ -77,15 +120,81 @@
         return `top: ${Math.round(topPos)}px; left: ${Math.round(clampedLeft)}px;`;
     });
 
-    const nextLabel = $derived.by(() => {
-        const isLast = sectionIndex === totalSections - 1;
-        if (isLast && hasNextTour) {
+    const resolvedNextLabel = $derived.by(() => {
+        if (isLastSection && hasNextTour) {
             return resolvedLabels.nextTour;
         }
-        if (isLast && !hasNextTour && resolvedLabels.finish) {
+        if (isLastSection && !hasNextTour && resolvedLabels.finish) {
             return resolvedLabels.finish;
         }
         return resolvedLabels.next;
+    });
+
+    const prevContext = $derived<NavButtonContext>({
+        label: resolvedLabels.previous,
+        disabled: !canGoPrevious,
+        sectionIndex,
+        totalSections,
+        tourName: activeTourName,
+        hasNextTour,
+        isLastSection
+    });
+    const prevActionContext = $derived<NavButtonActionContext>({
+        ...prevContext,
+        onclick: onPrevious,
+        class: 'pt-btn-secondary'
+    });
+
+    const nextContext = $derived<NavButtonContext>({
+        label: resolvedNextLabel,
+        disabled: !canGoNext,
+        sectionIndex,
+        totalSections,
+        tourName: activeTourName,
+        hasNextTour,
+        isLastSection
+    });
+    const nextActionContext = $derived<NavButtonActionContext>({
+        ...nextContext,
+        onclick: onNext,
+        class: 'pt-btn-primary'
+    });
+
+    const restartContext = $derived<NavButtonContext>({
+        label: resolvedLabels.restart,
+        disabled: false,
+        sectionIndex,
+        totalSections,
+        tourName: activeTourName,
+        hasNextTour,
+        isLastSection
+    });
+    const restartActionContext = $derived<NavButtonActionContext>({
+        ...restartContext,
+        onclick: onRestart,
+        class: 'pt-btn-secondary'
+    });
+
+    const closeContext = $derived<NavButtonContext>({
+        label: resolvedLabels.close,
+        disabled: false,
+        sectionIndex,
+        totalSections,
+        tourName: activeTourName,
+        hasNextTour,
+        isLastSection
+    });
+    const closeActionContext = $derived<NavButtonActionContext>({
+        ...closeContext,
+        onclick: onClose,
+        class: 'pt-btn-close',
+        ariaLabel: resolvedLabels.closeAriaLabel
+    });
+
+    const stepCounterContext = $derived<StepCounterContext>({
+        sectionIndex,
+        totalSections,
+        tourName: activeTourName
     });
 </script>
 
@@ -99,14 +208,24 @@
 >
     <div class="pt-tooltip-header">
         <h2 class="pt-tooltip-title">{content.title}</h2>
-        <button
-                type="button"
-                class="pt-btn-close"
-                onclick={onClose}
-                aria-label={resolvedLabels.closeAriaLabel}
-        >
-            {resolvedLabels.close}
-        </button>
+        {#if resolvedControls.showClose}
+            {#if closeButton}
+                {@render closeButton(closeActionContext)}
+            {:else}
+                <button
+                        type="button"
+                        class="pt-btn-close"
+                        onclick={onClose}
+                        aria-label={resolvedLabels.closeAriaLabel}
+                >
+                    {#if closeLabel}
+                        {@render closeLabel(closeContext)}
+                    {:else}
+                        {@html resolvedLabels.close}
+                    {/if}
+                </button>
+            {/if}
+        {/if}
     </div>
 
     {#if content.content}
@@ -119,36 +238,70 @@
 
     {#if shouldShowNav}
         <div class="pt-tooltip-footer">
-            <span class="pt-step-counter">{sectionIndex + 1} / {totalSections}</span>
+            {#if resolvedControls.showStepCounter}
+                {#if stepCounter}
+                    {@render stepCounter(stepCounterContext)}
+                {:else}
+                    <span class="pt-step-counter">{sectionIndex + 1} / {totalSections}</span>
+                {/if}
+            {/if}
 
             <div class="pt-tooltip-actions">
-                {#if showRestartButton}
-                    <button
-                            type="button"
-                            class="pt-btn-secondary"
-                            onclick={onRestart}
-                    >
-                        {resolvedLabels.restart}
-                    </button>
+                {#if resolvedControls.showRestart}
+                    {#if restartButton}
+                        {@render restartButton(restartActionContext)}
+                    {:else}
+                        <button
+                                type="button"
+                                class="pt-btn-secondary"
+                                onclick={onRestart}
+                        >
+                            {#if restartLabel}
+                                {@render restartLabel(restartContext)}
+                            {:else}
+                                {@html resolvedLabels.restart}
+                            {/if}
+                        </button>
+                    {/if}
                 {/if}
 
-                <button
-                        type="button"
-                        class="pt-btn-secondary"
-                        onclick={onPrevious}
-                        disabled={!canGoPrevious}
-                >
-                    {resolvedLabels.previous}
-                </button>
+                {#if resolvedControls.showPrevious}
+                    {#if prevButton}
+                        {@render prevButton(prevActionContext)}
+                    {:else}
+                        <button
+                                type="button"
+                                class="pt-btn-secondary"
+                                onclick={onPrevious}
+                                disabled={!canGoPrevious}
+                        >
+                            {#if prevLabel}
+                                {@render prevLabel(prevContext)}
+                            {:else}
+                                {@html resolvedLabels.previous}
+                            {/if}
+                        </button>
+                    {/if}
+                {/if}
 
-                <button
-                        type="button"
-                        class="pt-btn-primary"
-                        onclick={onNext}
-                        disabled={!canGoNext}
-                >
-                    {nextLabel}
-                </button>
+                {#if resolvedControls.showNext}
+                    {#if nextButton}
+                        {@render nextButton(nextActionContext)}
+                    {:else}
+                        <button
+                                type="button"
+                                class="pt-btn-primary"
+                                onclick={onNext}
+                                disabled={!canGoNext}
+                        >
+                            {#if customNextLabel}
+                                {@render customNextLabel(nextContext)}
+                            {:else}
+                                {@html resolvedNextLabel}
+                            {/if}
+                        </button>
+                    {/if}
+                {/if}
             </div>
         </div>
     {/if}

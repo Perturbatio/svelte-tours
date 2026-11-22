@@ -2,6 +2,7 @@ import { mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TourManager } from '../../src';
 import TourProvider from '../../src/svelte/TourProvider.svelte';
+import SnippetTestWrapper from './SnippetTestWrapper.svelte';
 
 describe('TourProvider component', () => {
     let container: HTMLElement;
@@ -416,5 +417,295 @@ describe('TourProvider restart positioning', () => {
 
         target1.remove();
         target2.remove();
+    });
+});
+
+describe('TourProvider HTML label rendering', () => {
+    let container: HTMLElement;
+    let manager: TourManager;
+    let app: Record<string, unknown>;
+
+    beforeEach(() => {
+        localStorage.clear();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        manager = new TourManager({ storageKey: 'test_html_labels' });
+    });
+
+    afterEach(() => {
+        unmount(app);
+        container.remove();
+    });
+
+    it('renders HTML markup inside button labels in tooltip', async () => {
+        manager.addTour({
+            name: 'htmlLabelsTour',
+            showRestart: true,
+            labels: {
+                previous: '<span class="icon-prev">←</span> Prev',
+                next: '<span class="icon-next">→</span> Next',
+                restart: '<strong>Restart</strong>',
+                close: '<em>Close</em>'
+            },
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'HTML Step 1' }
+                }
+            }
+        });
+        manager.start('htmlLabelsTour');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: { manager }
+        });
+
+        await Promise.resolve();
+
+        expect(container.querySelector('.icon-prev')).not.toBeNull();
+        expect(container.querySelector('.icon-next')).not.toBeNull();
+        expect(container.querySelector('strong')?.textContent).toBe('Restart');
+        expect(container.querySelector('em')?.textContent).toBe('Close');
+    });
+
+    it('renders HTML markup inside button labels in navbar', async () => {
+        manager.addTour({
+            name: 'htmlLabelsNavBar',
+            navPlacement: 'top',
+            showRestart: true,
+            labels: {
+                previous: '<span class="navbar-prev">Back</span>',
+                next: '<span class="navbar-next">Forward</span>',
+                restart: '<span class="navbar-restart">Again</span>',
+                close: '<span class="navbar-close">Exit</span>'
+            },
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'HTML NavBar Step' }
+                }
+            }
+        });
+        manager.start('htmlLabelsNavBar');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: { manager }
+        });
+
+        await Promise.resolve();
+
+        expect(container.querySelector('.navbar-prev')).not.toBeNull();
+        expect(container.querySelector('.navbar-next')).not.toBeNull();
+        expect(container.querySelector('.navbar-restart')).not.toBeNull();
+        expect(container.querySelector('.navbar-close')).not.toBeNull();
+    });
+});
+
+describe('TourProvider Navigation Controls Visibility', () => {
+    let container: HTMLElement;
+    let manager: TourManager;
+    let app: Record<string, unknown>;
+
+    beforeEach(() => {
+        localStorage.clear();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        manager = new TourManager({ storageKey: 'test_controls_vis' });
+    });
+
+    afterEach(() => {
+        unmount(app);
+        container.remove();
+    });
+
+    it('hides previous and close buttons when showPrevious: false and showClose: false', async () => {
+        manager.addTour({
+            name: 'hideControlsTour',
+            controls: {
+                showPrevious: false,
+                showClose: false,
+                showStepCounter: false
+            },
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step 1' }
+                }
+            }
+        });
+        manager.start('hideControlsTour');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: { manager }
+        });
+
+        await Promise.resolve();
+
+        expect(container.querySelector('.pt-btn-close')).toBeNull();
+        expect(container.querySelector('.pt-step-counter')).toBeNull();
+
+        const buttons = Array.from(container.querySelectorAll('button'));
+        const prevBtn = buttons.find((b) => b.textContent?.trim() === 'Previous');
+        const nextBtn = buttons.find((b) => b.textContent?.trim() === 'Next');
+
+        expect(prevBtn).toBeUndefined();
+        expect(nextBtn).toBeDefined();
+    });
+
+    it('allows TourProvider prop controls to override active tour controls', async () => {
+        manager.addTour({
+            name: 'providerOverrideTour',
+            controls: {
+                showPrevious: true,
+                showNext: true,
+                showRestart: false
+            },
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step 1' }
+                }
+            }
+        });
+        manager.start('providerOverrideTour');
+
+        app = mount(TourProvider, {
+            target: container,
+            props: {
+                manager,
+                controls: {
+                    showNext: false,
+                    showRestart: true
+                }
+            }
+        });
+
+        await Promise.resolve();
+
+        const buttons = Array.from(container.querySelectorAll('button'));
+        const nextBtn = buttons.find((b) => b.textContent?.trim() === 'Next');
+        const restartBtn = buttons.find((b) => b.textContent?.trim() === 'Restart Tour');
+
+        expect(nextBtn).toBeUndefined();
+        expect(restartBtn).toBeDefined();
+    });
+});
+
+describe('TourProvider Svelte 5 Snippets', () => {
+    let container: HTMLElement;
+    let manager: TourManager;
+    let app: Record<string, unknown>;
+
+    beforeEach(() => {
+        localStorage.clear();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        manager = new TourManager({ storageKey: 'test_snippets' });
+    });
+
+    afterEach(() => {
+        unmount(app);
+        container.remove();
+    });
+
+    it('renders custom inner label snippets and custom step counter snippet', async () => {
+        manager.addTour({
+            name: 'innerSnippetsTour',
+            showRestart: true,
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step One' }
+                },
+                step2: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step Two' }
+                }
+            }
+        });
+        manager.start('innerSnippetsTour');
+
+        app = mount(SnippetTestWrapper, {
+            target: container,
+            props: {
+                manager,
+                useInnerSnippets: true
+            }
+        });
+
+        await Promise.resolve();
+
+        expect(container.querySelector('.custom-next-label')?.textContent).toBe('Custom Next (1/2)');
+        expect(container.querySelector('.custom-prev-label')?.textContent).toBe('Custom Prev (disabled: true)');
+        expect(container.querySelector('.custom-close-label')?.textContent).toBe('Custom Close');
+        expect(container.querySelector('.custom-restart-label')?.textContent).toBe('Custom Restart');
+        expect(container.querySelector('.custom-step-counter')?.textContent).toBe('Step 1 of 2 in innerSnippetsTour');
+
+        // Verify default button classes are still preserved around inner snippets
+        expect(container.querySelector('.pt-btn-primary .custom-next-label')).not.toBeNull();
+        expect(container.querySelector('.pt-btn-secondary .custom-prev-label')).not.toBeNull();
+    });
+
+    it('replaces button elements completely with full button wrapper snippets', async () => {
+        manager.addTour({
+            name: 'buttonSnippetsTour',
+            showRestart: true,
+            sections: {
+                step1: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step One' }
+                },
+                step2: {
+                    elements: ['.no-el'],
+                    targetGraceMs: 0,
+                    content: { title: 'Step Two' }
+                }
+            }
+        });
+        manager.start('buttonSnippetsTour');
+
+        app = mount(SnippetTestWrapper, {
+            target: container,
+            props: {
+                manager,
+                useButtonSnippets: true
+            }
+        });
+
+        await Promise.resolve();
+
+        const customNext = container.querySelector('.custom-next-btn') as HTMLButtonElement;
+        const customPrev = container.querySelector('.custom-prev-btn') as HTMLButtonElement;
+        const customClose = container.querySelector('.custom-close-btn') as HTMLButtonElement;
+        const customRestart = container.querySelector('.custom-restart-btn') as HTMLButtonElement;
+
+        expect(customNext).not.toBeNull();
+        expect(customPrev).not.toBeNull();
+        expect(customClose).not.toBeNull();
+        expect(customRestart).not.toBeNull();
+
+        expect(customPrev.disabled).toBe(true);
+        expect(customNext.disabled).toBe(false);
+
+        // Standard buttons should NOT be present
+        expect(container.querySelector('.pt-btn-primary')).toBeNull();
+
+        // Clicking custom next advances tour
+        customNext.click();
+        await Promise.resolve();
+
+        expect(manager.getActiveState()?.sectionKey).toBe('step2');
+        expect(customPrev.disabled).toBe(false);
+        expect(customNext.disabled).toBe(true);
     });
 });

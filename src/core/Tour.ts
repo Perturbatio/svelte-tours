@@ -4,7 +4,27 @@
  * validates required fields, and exposes ordered section
  * keys and lookup helpers.
  */
-import type { TourConfig, TourNavLabels, TourNavPlacement, TourSection } from './types';
+import type { TourConfig, TourNavControls, TourNavLabels, TourNavPlacement, TourSection } from './types';
+
+function extractControls(obj: any): TourNavControls | undefined {
+    if (!obj) return undefined;
+    const directControls = obj.controls ?? obj.navControls;
+    const flatControls: TourNavControls = {};
+    let hasFlat = false;
+    if (obj.showPrevious !== undefined) { flatControls.showPrevious = obj.showPrevious; hasFlat = true; }
+    if (obj.showPrev !== undefined) { flatControls.showPrev = obj.showPrev; hasFlat = true; }
+    if (obj.showNext !== undefined) { flatControls.showNext = obj.showNext; hasFlat = true; }
+    if (obj.showClose !== undefined) { flatControls.showClose = obj.showClose; hasFlat = true; }
+    if (obj.showRestart !== undefined) { flatControls.showRestart = obj.showRestart; hasFlat = true; }
+    if (obj.showRestartButton !== undefined) { flatControls.showRestartButton = obj.showRestartButton; hasFlat = true; }
+    if (obj.showStepCounter !== undefined) { flatControls.showStepCounter = obj.showStepCounter; hasFlat = true; }
+    if (obj.showCounter !== undefined) { flatControls.showCounter = obj.showCounter; hasFlat = true; }
+
+    if (directControls && hasFlat) {
+        return { ...directControls, ...flatControls };
+    }
+    return directControls ?? (hasFlat ? flatControls : undefined);
+}
 
 export class Tour {
     readonly name: string;
@@ -15,6 +35,7 @@ export class Tour {
     readonly showRestartButton: boolean;
     readonly navPlacement: TourNavPlacement | undefined;
     readonly labels: TourNavLabels | undefined;
+    readonly controls: TourNavControls | undefined;
     readonly sections: Record<string, TourSection>;
     readonly sectionKeys: string[];
 
@@ -36,23 +57,28 @@ export class Tour {
         this.showRestartButton = Boolean(config.showRestartButton);
         this.navPlacement = config.navPlacement;
         this.labels = config.labels ?? config.navLabels;
+        this.controls = extractControls(config);
 
         const normalizedSections: Record<string, TourSection> = {};
         for (const key of keys) {
             const section = config.sections[key];
             const sectionLabels = section.labels ?? section.navLabels ?? section.content?.labels;
+            const sectionControls = extractControls(section) ?? extractControls(section.content);
             normalizedSections[key] = {
                 elements: Array.isArray(section.elements) ? [...section.elements] : [],
                 content: {
                     title: section.content.title,
                     content: section.content.content,
                     description: section.content.description,
-                    labels: sectionLabels
+                    labels: sectionLabels,
+                    controls: sectionControls
                 },
                 targetGraceMs: section.targetGraceMs,
                 navPlacement: section.navPlacement,
                 labels: sectionLabels,
-                navLabels: sectionLabels
+                navLabels: sectionLabels,
+                controls: sectionControls,
+                navControls: sectionControls
             };
         }
 

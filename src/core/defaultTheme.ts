@@ -2,7 +2,13 @@
  * This module defines the default TourTheme values, merges custom theme overrides,
  * and formats the theme as CSS custom properties (--pt-*)
  **/
-import type { ResolvedTourNavLabels, TourNavLabels, TourTheme } from './types';
+import type {
+    ResolvedTourNavControls,
+    ResolvedTourNavLabels,
+    TourNavControls,
+    TourNavLabels,
+    TourTheme
+} from './types';
 
 export const DEFAULT_NAV_LABELS: Readonly<ResolvedTourNavLabels> = Object.freeze({
     previous: 'Previous',
@@ -12,6 +18,15 @@ export const DEFAULT_NAV_LABELS: Readonly<ResolvedTourNavLabels> = Object.freeze
     close: 'Close',
     closeAriaLabel: 'Close tour',
     navAriaLabel: 'Tour navigation'
+});
+
+export const DEFAULT_NAV_CONTROLS: Readonly<ResolvedTourNavControls> = Object.freeze({
+    showPrevious: true,
+    showNext: true,
+    showClose: true,
+    showRestart: false,
+    showStepCounter: true,
+    showTourTitle: true
 });
 
 export function resolveTourNavLabels(
@@ -66,6 +81,48 @@ export function resolveTourNavLabels(
     };
 }
 
+export function resolveTourNavControls(
+    ...sources: (TourNavControls | undefined)[]
+): ResolvedTourNavControls {
+    let showPrevious = DEFAULT_NAV_CONTROLS.showPrevious;
+    let showNext = DEFAULT_NAV_CONTROLS.showNext;
+    let showClose = DEFAULT_NAV_CONTROLS.showClose;
+    let showRestart = DEFAULT_NAV_CONTROLS.showRestart;
+    let showStepCounter = DEFAULT_NAV_CONTROLS.showStepCounter;
+    let showTourTitle = DEFAULT_NAV_CONTROLS.showTourTitle ?? true;
+
+    for (const src of sources) {
+        if (!src) continue;
+        if (src.showPrevious !== undefined || src.showPrev !== undefined) {
+            showPrevious = Boolean(src.showPrevious ?? src.showPrev);
+        }
+        if (src.showNext !== undefined) {
+            showNext = Boolean(src.showNext);
+        }
+        if (src.showClose !== undefined) {
+            showClose = Boolean(src.showClose);
+        }
+        if (src.showRestart !== undefined || src.showRestartButton !== undefined) {
+            showRestart = Boolean(src.showRestart ?? src.showRestartButton);
+        }
+        if (src.showStepCounter !== undefined || src.showCounter !== undefined) {
+            showStepCounter = Boolean(src.showStepCounter ?? src.showCounter);
+        }
+        if (src.showTourTitle !== undefined) {
+            showTourTitle = Boolean(src.showTourTitle ?? src.showTourTitle);
+        }
+    }
+
+    return {
+        showPrevious,
+        showNext,
+        showClose,
+        showRestart,
+        showStepCounter,
+        showTourTitle
+    };
+}
+
 export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
     maskBgColor: '#000000',
     maskTransparency: 0.6,
@@ -83,6 +140,7 @@ export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
     buttonTextColor: '#ffffff',
     zIndex: 9999,
     labels: { ...DEFAULT_NAV_LABELS },
+    controls: { ...DEFAULT_NAV_CONTROLS },
     navPlacement: 'tooltip',
     navBgColor: '#ffffff',
     navTextColor: '#111827',
@@ -95,12 +153,30 @@ export const DEFAULT_TOUR_THEME: Readonly<TourTheme> = Object.freeze({
 });
 
 export function resolveTourTheme(customTheme?: Partial<TourTheme>): TourTheme {
+    const rawControls = customTheme?.controls ?? customTheme?.navControls;
+    const flatControls: TourNavControls = {};
+    let hasFlat = false;
+    if (customTheme?.showPrevious !== undefined) { flatControls.showPrevious = customTheme.showPrevious; hasFlat = true; }
+    if (customTheme?.showPrev !== undefined) { flatControls.showPrev = customTheme.showPrev; hasFlat = true; }
+    if (customTheme?.showNext !== undefined) { flatControls.showNext = customTheme.showNext; hasFlat = true; }
+    if (customTheme?.showClose !== undefined) { flatControls.showClose = customTheme.showClose; hasFlat = true; }
+    if (customTheme?.showRestart !== undefined) { flatControls.showRestart = customTheme.showRestart; hasFlat = true; }
+    if (customTheme?.showRestartButton !== undefined) { flatControls.showRestartButton = customTheme.showRestartButton; hasFlat = true; }
+    if (customTheme?.showStepCounter !== undefined) { flatControls.showStepCounter = customTheme.showStepCounter; hasFlat = true; }
+    if (customTheme?.showCounter !== undefined) { flatControls.showCounter = customTheme.showCounter; hasFlat = true; }
+    if (customTheme?.showTourTitle !== undefined) { flatControls.showTourTitle = customTheme.showTourTitle; hasFlat = true; }
+
+    const themeControls = rawControls && hasFlat ? { ...rawControls, ...flatControls } : (rawControls ?? (hasFlat ? flatControls : undefined));
+
     return {
         ...DEFAULT_TOUR_THEME,
         ...customTheme,
         labels: customTheme?.labels || customTheme?.navLabels
             ? resolveTourNavLabels(DEFAULT_NAV_LABELS, customTheme.labels ?? customTheme.navLabels)
-            : DEFAULT_TOUR_THEME.labels
+            : DEFAULT_TOUR_THEME.labels,
+        controls: themeControls
+            ? resolveTourNavControls(DEFAULT_NAV_CONTROLS, themeControls)
+            : DEFAULT_TOUR_THEME.controls
     };
 }
 

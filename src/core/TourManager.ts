@@ -5,6 +5,7 @@
  */
 import {
     DEFAULT_TOUR_THEME,
+    resolveTourNavControls,
     resolveTourNavLabels,
     resolveTourTheme,
     themeToCssVariables
@@ -240,6 +241,11 @@ export class TourManager {
             tour.labels,
             section.labels ?? section.navLabels ?? section.content?.labels
         );
+        const controls = resolveTourNavControls(
+            this.theme.controls ?? this.theme.navControls,
+            tour.controls,
+            section.controls ?? section.navControls ?? section.content?.controls
+        );
 
         return {
             tourName: tour.name,
@@ -252,10 +258,11 @@ export class TourManager {
             placement,
             navPlacement,
             labels,
+            controls,
             canGoPrevious: sectionIndex > 0,
             canGoNext: hasNextSection || hasNextTour,
             hasNextTour,
-            showRestartButton: tour.showRestartButton,
+            showRestartButton: controls.showRestart,
             stepId: this.activeSession.stepId
         };
     }
