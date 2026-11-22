@@ -14,7 +14,8 @@ describe('Navigation Controls Resolution', () => {
             showNext: true,
             showClose: true,
             showRestart: false,
-            showStepCounter: true
+            showStepCounter: true,
+            showTourTitle: true
         });
     });
 
